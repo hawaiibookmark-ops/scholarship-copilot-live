@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scholarship Copilot</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding-top: 50px; }
+        .container { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 600px; text-align: center; }
+        input { width: 80%; padding: 12px; margin-top: 20px; border: 1px solid #ddd; border-radius: 6px; }
+        button { background: #007bff; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        #results { margin-top: 30px; text-align: left; white-space: pre-wrap; background: #f8f9fa; padding: 20px; border-radius: 8px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Scholarship Copilot</h1>
+        <p>Powered by Perplexity AI & AWS</p>
+        
+        <input type="text" id="query" placeholder="e.g., Nursing scholarships for students in Hawaii" />
+        <br>
+        <button onclick="searchScholarships()">Find Scholarships</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function searchScholarships() {
+            const query = document.getElementById('query').value;
+            const resultsDiv = document.getElementById('results');
+            
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML = "🔎 Scanning the internet for live opportunities...";
+
+            try {
+                const response = await fetch('/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+                const data = await response.json();
+                resultsDiv.innerHTML = data.result || "No results found.";
+            } catch (error) {
+                resultsDiv.innerHTML = "❌ Error connecting to AI.";
+            }
+        }
+    </script>
+</body>
+</html>

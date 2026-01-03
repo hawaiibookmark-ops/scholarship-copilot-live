@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scholarship Search - Copilot</title>
+    <style>
+        body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
+        .nav { text-align: center; margin-bottom: 30px; }
+        .nav a { margin: 0 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
+        
+        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
+        input { flex-grow: 1; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button { padding: 15px 30px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #0056b3; }
+
+        .result-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .result-card h3 { margin-top: 0; color: #333; }
+        .result-card p { color: #666; line-height: 1.5; }
+        .apply-btn { background-color: #28a745; margin-top: 10px; display: inline-block; }
+        .apply-btn:hover { background-color: #218838; }
+        
+        #loading { text-align: center; display: none; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <strong>Search Scholarships</strong> | 
+        <a href="profile.html">My Profile</a> | 
+        <a href="write.html">Essay Writer</a>
+    </div>
+
+    <h1 style="text-align: center;">🔎 Find Money</h1>
+
+    <div class="search-box">
+        <input type="text" id="query" placeholder="E.g., Scholarships for nursing students in Texas...">
+        <button onclick="search()">Search</button>
+    </div>
+
+    <div id="loading">Scanning the web for live scholarships...</div>
+    <div id="results"></div>
+
+    <script>
+        async function search() {
+            const query = document.getElementById('query').value;
+            const resultsDiv = document.getElementById('results');
+            const loading = document.getElementById('loading');
+            
+            if(!query) return alert("Type something!");
+
+            loading.style.display = 'block';
+            resultsDiv.innerHTML = '';
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query })
+                });
+
+                const data = await response.json();
+                loading.style.display = 'none';
+
+                // We assume Perplexity returns a block of text. We will display it simply.
+                // In a future version, we can force JSON to make "cards" prettier.
+                // For now, let's treat the whole response as a list.
+                
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                // Convert newlines to HTML breaks so it looks readable
+                const cleanText = data.choices[0].message.content.replace(/\n/g, '<br>');
+                
+                card.innerHTML = `
+                    <h3>Search Results</h3>
+                    <p>${cleanText}</p>
+                    <hr>
+                    <p><strong>Found one you like?</strong> Copy the question and click below:</p>
+                    <a href="write.html" class="apply-btn" style="text-decoration:none; color:white; padding:10px 20px; border-radius:4px;">
+                        Go to Essay Writer →
+                    </a>
+                `;
+                resultsDiv.appendChild(card);
+
+            } catch (err) {
+                loading.style.display = 'none';
+                alert("Search failed. Check server.");
+            }
+        }
+    </script>
+</body>
+</html>

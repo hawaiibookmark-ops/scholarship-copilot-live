@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Boss Dashboard - Admin</title>
+    <style>
+        body { font-family: sans-serif; max-width: 1000px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
+        h1 { text-align: center; color: #333; }
+        .pin-box { background: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-free { background-color: #eee; color: #555; }
+        .badge-premium { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+        .action-btn { background-color: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .action-btn:hover { background-color: #218838; }
+        .action-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <h1>👔 Boss Dashboard</h1>
+
+    <div class="pin-box">
+        <label><strong>Enter Admin PIN:</strong></label>
+        <input type="password" id="pinInput" placeholder="Enter PIN">
+        <button onclick="loadUsers()">Unlock</button>
+    </div>
+
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            </tbody>
+    </table>
+
+    <script>
+        async function loadUsers() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center">Loading...</td></tr>';
+
+            try {
+                const response = await fetch('/api/admin/users');
+                const users = await response.json();
+
+                tableBody.innerHTML = ''; // Clear loading
+
+                users.forEach(user => {
+                    const row = document.createElement('tr');
+                    
+                    let statusBadge = `<span class="badge badge-free">FREE</span>`;
+                    let actionButton = `<button class="action-btn" onclick="grantPremium('${user.email}')">Grant Premium</button>`;
+
+                    if (user.subscription_status === 'premium') {
+                        statusBadge = `<span class="badge badge-premium">✨ PREMIUM</span>`;
+                        actionButton = `<button class="action-btn" disabled>Active</button>`;
+                    }
+
+                    row.innerHTML = `
+                        <td>${user.full_name || 'No Name'}</td>
+                        <td>${user.email}</td>
+                        <td>${statusBadge}</td>
+                        <td>${actionButton}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+            } catch (err) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red">Error loading users.</td></tr>';
+            }
+        }
+
+        async function grantPremium(email) {
+            const pin = document.getElementById('pinInput').value;
+            if (!pin) return alert("Please enter the PIN first!");
+
+            if(!confirm(`Are you sure you want to give FREE Premium access to ${email}?`)) return;
+
+            try {
+                const response = await fetch('/api/admin/promote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, pin: pin })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert("Success! User is now Premium.");
+                    loadUsers(); // Refresh the list
+                } else {
+                    alert("Error: " + result.error);
+                }
+            } catch (err) {
+                alert("Network error.");
+            }
+        }
+    </script>
+</body>
+</html>

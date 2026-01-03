@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Essay Generator - Scholarship Copilot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav { margin-bottom: 20px; text-align: center; }
+        .nav a { margin: 0 10px; color: #007bff; text-decoration: none; }
+        textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
+        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
+        
+        button { background-color: #007bff; color: white; padding: 15px 25px; border: none; font-size: 16px; cursor: pointer; width: 100%; margin-bottom: 10px; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        
+        /* Different color for the PDF button */
+        .pdf-btn { background-color: #dc3545; display: none; } /* Hidden by default */
+        .pdf-btn:hover { background-color: #a71d2a; }
+
+        #resultArea { margin-top: 30px; background: #fff8dc; padding: 25px; border: 1px solid #e0d8b0; display: none; border-radius: 4px; }
+        #essayContent { white-space: pre-wrap; line-height: 1.8; font-family: 'Times New Roman', Times, serif; font-size: 18px; }
+        .loading { color: #666; font-style: italic; text-align: center; display: none; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <a href="index.html">Search</a> | 
+        <a href="profile.html">My Profile</a> | 
+        <strong>Write Essay</strong>
+    </div>
+
+    <div class="container">
+        <h1>✨ Magic Essay Writer</h1>
+        <p>Enter a scholarship question below, and we will write the answer using your Digital Resume.</p>
+
+        <label><strong>Your Email:</strong></label>
+        <input type="email" id="email" placeholder="student@example.com">
+
+        <label><strong>Scholarship Question / Prompt:</strong></label>
+        <textarea id="prompt" placeholder="Example: Why do you deserve this scholarship?"></textarea>
+
+        <button onclick="generateEssay()">Draft My Essay</button>
+        
+        <p id="loading" class="loading">🤖 The AI is thinking... please wait...</p>
+
+        <div id="resultArea">
+            <h3>Your Draft:</h3>
+            <div id="essayContent"></div>
+            <br>
+            <button onclick="downloadPDF()" class="pdf-btn" id="pdfBtn">📄 Download as PDF</button>
+        </div>
+    </div>
+
+    <script>
+        async function generateEssay() {
+            const email = document.getElementById('email').value;
+            const prompt = document.getElementById('prompt').value;
+            const loading = document.getElementById('loading');
+            const resultArea = document.getElementById('resultArea');
+            const content = document.getElementById('essayContent');
+            const pdfBtn = document.getElementById('pdfBtn');
+
+            if(!email || !prompt) { alert("Please fill in both fields."); return; }
+
+            // Reset UI
+            loading.style.display = 'block';
+            resultArea.style.display = 'none';
+            pdfBtn.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/write-essay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, scholarship_prompt: prompt })
+                });
+
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+
+                if (data.success) {
+                    resultArea.style.display = 'block';
+                    content.textContent = data.essay;
+                    pdfBtn.style.display = 'block'; // Show the PDF button now
+                } else {
+                    alert("Error: " + data.error);
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                alert("Network Error.");
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('essayContent');
+            // Settings for the PDF
+            const opt = {
+              margin:       1,
+              filename:     'Scholarship_Essay.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2 },
+              jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            // Generate
+            html2pdf().set(opt).from(element).save();
+        }
+    </script>
+</body>
+</html>
