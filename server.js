@@ -23,6 +23,26 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// --- AUTO-FIX: Create Table if Missing ---
+// This runs automatically when the server starts to fix your "Database Error"
+pool.query(`
+  CREATE TABLE IF NOT EXISTS student_profiles (
+    user_id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    full_name VARCHAR(255),
+    current_gpa VARCHAR(50),
+    education_level VARCHAR(50),
+    major_of_interest VARCHAR(255),
+    personal_statement TEXT,
+    extracurriculars TEXT,
+    subscription_status VARCHAR(50) DEFAULT 'free',
+    is_friends_family BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+`).then(() => console.log("✅ Table 'student_profiles' is ready!"))
+  .catch(err => console.error("❌ Table Error:", err));
+
 // --- 1. SEARCH SCHOLARSHIPS ---
 app.post('/api/search', async (req, res) => {
     const { query } = req.body;
@@ -48,6 +68,7 @@ app.post('/api/search', async (req, res) => {
 // --- 2. SAVE PROFILE ---
 app.post('/api/save-profile', async (req, res) => {
     const { email, full_name, current_gpa, education_level, major_of_interest, personal_statement, extracurriculars } = req.body;
+    
     const query = `
         INSERT INTO student_profiles (email, full_name, current_gpa, education_level, major_of_interest, personal_statement, extracurriculars)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -61,10 +82,12 @@ app.post('/api/save-profile', async (req, res) => {
             updated_at = CURRENT_TIMESTAMP
         RETURNING *;
     `;
+    
     try {
         const result = await pool.query(query, [email, full_name, current_gpa, education_level, major_of_interest, personal_statement, extracurriculars]);
         res.status(200).json({ success: true, profile: result.rows[0] });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, error: 'Database error' });
     }
 });
