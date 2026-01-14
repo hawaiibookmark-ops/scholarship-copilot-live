@@ -2,112 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Essay Generator - Scholarship Copilot</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <title>AI Grant Writer</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .nav { margin-bottom: 20px; text-align: center; }
-        .nav a { margin: 0 10px; color: #007bff; text-decoration: none; }
-        textarea { width: 100%; height: 100px; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
-        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; }
         
-        button { background-color: #007bff; color: white; padding: 15px 25px; border: none; font-size: 16px; cursor: pointer; width: 100%; margin-bottom: 10px; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
+        /* NAVIGATION */
+        .nav { text-align: center; margin-bottom: 30px; }
+        .nav a { margin: 0 15px; text-decoration: none; color: #007bff; font-weight: bold; }
+        .upgrade-link { color: #d9534f !important; font-weight: bold; } /* Red for visibility */
         
-        /* Different color for the PDF button */
-        .pdf-btn { background-color: #dc3545; display: none; } /* Hidden by default */
-        .pdf-btn:hover { background-color: #a71d2a; }
-
-        #resultArea { margin-top: 30px; background: #fff8dc; padding: 25px; border: 1px solid #e0d8b0; display: none; border-radius: 4px; }
-        #essayContent { white-space: pre-wrap; line-height: 1.8; font-family: 'Times New Roman', Times, serif; font-size: 18px; }
-        .loading { color: #666; font-style: italic; text-align: center; display: none; margin-top: 15px; }
+        /* MAIN BOX */
+        .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+        input, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        textarea { height: 150px; font-family: sans-serif; }
+        
+        /* MAGIC BUTTON */
+        button { width: 100%; padding: 15px; background-color: #6f42c1; color: white; border: none; border-radius: 4px; font-size: 18px; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        button:hover { background-color: #5a32a3; }
+        
+        /* OUTPUT AREA */
+        #output { white-space: pre-wrap; background-color: #f8f9fa; padding: 15px; border-left: 5px solid #6f42c1; margin-top: 20px; display: none; }
+        .loading { text-align: center; color: #666; display: none; margin-top: 20px; font-style: italic; }
     </style>
 </head>
 <body>
 
     <div class="nav">
         <a href="index.html">Search</a> | 
-        <a href="profile.html">My Profile</a> | 
-        <strong>Write Essay</strong>
+        <a href="profile.html">Profile</a> | 
+        <strong>Grant Writer</strong> |
+        <a href="upgrade.html" class="upgrade-link">⭐ Upgrade</a>
     </div>
 
-    <div class="container">
-        <h1>✨ Magic Essay Writer</h1>
-        <p>Enter a scholarship question below, and we will write the answer using your Digital Resume.</p>
+    <div class="section">
+        <h2>✨ AI Grant & Proposal Writer</h2>
+        <p>Tell the AI what you are applying for. It will combine your request with your <strong>Profile</strong> story.</p>
 
-        <label><strong>Your Email:</strong></label>
-        <input type="email" id="email" placeholder="student@example.com">
+        <label>Verify Your Email (Must match Profile)</label>
+        <input type="email" id="email" placeholder="e.g. aloha@example.com">
 
-        <label><strong>Scholarship Question / Prompt:</strong></label>
-        <textarea id="prompt" placeholder="Example: Why do you deserve this scholarship?"></textarea>
+        <label>What are we writing today?</label>
+        <textarea id="prompt" placeholder="Example: Write a cover letter for the Native Hawaiian Small Business Grant. Focus on community impact."></textarea>
 
-        <button onclick="generateEssay()">Draft My Essay</button>
+        <button onclick="writeEssay()">✍️ Draft My Proposal</button>
         
-        <p id="loading" class="loading">🤖 The AI is thinking... please wait...</p>
-
-        <div id="resultArea">
-            <h3>Your Draft:</h3>
-            <div id="essayContent"></div>
-            <br>
-            <button onclick="downloadPDF()" class="pdf-btn" id="pdfBtn">📄 Download as PDF</button>
-        </div>
+        <p id="loading" class="loading">🧠 Thinking... (This takes about 10 seconds)</p>
+        
+        <div id="output"></div>
     </div>
 
     <script>
-        async function generateEssay() {
+        async function writeEssay() {
             const email = document.getElementById('email').value;
             const prompt = document.getElementById('prompt').value;
+            const outputDiv = document.getElementById('output');
             const loading = document.getElementById('loading');
-            const resultArea = document.getElementById('resultArea');
-            const content = document.getElementById('essayContent');
-            const pdfBtn = document.getElementById('pdfBtn');
 
-            if(!email || !prompt) { alert("Please fill in both fields."); return; }
+            // 1. FAIL-SAFE: Check if they typed anything
+            if (!email || !prompt) {
+                alert("Please enter your email and a prompt!");
+                return;
+            }
 
-            // Reset UI
+            // 2. SHOW LOADING
             loading.style.display = 'block';
-            resultArea.style.display = 'none';
-            pdfBtn.style.display = 'none';
+            outputDiv.style.display = 'none';
+            outputDiv.innerText = "";
 
             try {
-                const response = await fetch('/api/write-essay', {
+                // 3. CALL THE BRAIN
+                const res = await fetch('/api/write-essay', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email, scholarship_prompt: prompt })
                 });
 
-                const data = await response.json();
-                
+                const data = await res.json();
+
+                // 4. HIDE LOADING
                 loading.style.display = 'none';
 
                 if (data.success) {
-                    resultArea.style.display = 'block';
-                    content.textContent = data.essay;
-                    pdfBtn.style.display = 'block'; // Show the PDF button now
+                    outputDiv.style.display = 'block';
+                    outputDiv.innerText = data.essay;
                 } else {
                     alert("Error: " + data.error);
                 }
-            } catch (err) {
+            } catch (error) {
+                console.error(error);
                 loading.style.display = 'none';
-                alert("Network Error.");
+                alert("❌ Connection failed. Is the server running?");
             }
         }
-
-        function downloadPDF() {
-            const element = document.getElementById('essayContent');
-            // Settings for the PDF
-            const opt = {
-              margin:       1,
-              filename:     'Scholarship_Essay.pdf',
-              image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { scale: 2 },
-              jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            
-            // Generate
-            html2pdf().set(opt).from(element).save();
-        }
     </script>
+
 </body>
 </html>
