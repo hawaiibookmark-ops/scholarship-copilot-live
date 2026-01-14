@@ -2,88 +2,108 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Scholarship Search - Copilot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scholarship Copilot</title>
     <style>
-        body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background-color: #f4f4f9; }
-        .nav { text-align: center; margin-bottom: 30px; }
-        .nav a { margin: 0 15px; text-decoration: none; color: #007bff; font-weight: bold; font-size: 18px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; }
         
-        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
-        input { flex-grow: 1; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
-        button { padding: 15px 30px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #0056b3; }
+        /* HERO SECTION */
+        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 20px; text-align: center; }
+        .hero h1 { margin: 0; font-size: 3rem; }
+        .hero p { font-size: 1.2rem; margin-top: 10px; opacity: 0.9; }
+        
+        /* NAVIGATION */
+        .nav { background: white; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .nav a { margin: 0 15px; text-decoration: none; color: #555; font-weight: bold; font-size: 18px; }
+        .nav a:hover { color: #764ba2; }
+        .upgrade-btn { color: #d9534f !important; font-weight: bold; }
 
-        .result-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .result-card h3 { margin-top: 0; color: #333; }
-        .result-card p { color: #666; line-height: 1.5; }
-        .apply-btn { background-color: #28a745; margin-top: 10px; display: inline-block; }
-        .apply-btn:hover { background-color: #218838; }
+        /* INSTRUCTIONS GRID */
+        .steps-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 40px 20px; max-width: 1000px; margin: 0 auto; }
+        .step-card { background: white; padding: 30px; border-radius: 10px; width: 250px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .step-card:hover { transform: translateY(-5px); }
+        .icon { font-size: 40px; margin-bottom: 15px; display: block; }
+        .step-title { font-weight: bold; font-size: 1.2rem; margin-bottom: 10px; color: #444; }
+        .step-desc { font-size: 0.9rem; color: #666; line-height: 1.5; }
+
+        /* SEARCH SECTION */
+        .search-box { max-width: 600px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 70%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button { padding: 12px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #218838; }
         
-        #loading { text-align: center; display: none; color: #666; font-style: italic; }
+        #results { max-width: 800px; margin: 20px auto; text-align: left; padding: 20px; }
+        .result-item { background: white; padding: 15px; margin-bottom: 10px; border-left: 5px solid #764ba2; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <div class="nav">
-        <strong>Search Scholarships</strong> | 
-        <a href="profile.html">My Profile</a> | 
-        <a href="write.html">Essay Writer</a>
+        <strong>Home</strong> | 
+        <a href="profile.html">Profile</a> | 
+        <a href="write.html">Grant Writer</a> |
+        <a href="upgrade.html" class="upgrade-btn">⭐ Upgrade</a>
     </div>
 
-    <h1 style="text-align: center;">🔎 Find Money</h1>
+    <div class="hero">
+        <h1>Scholarship Copilot</h1>
+        <p>Your AI assistant for finding money and writing grants.</p>
+    </div>
+
+    <div class="steps-container">
+        <div class="step-card">
+            <span class="icon">👤</span>
+            <div class="step-title">1. Build Profile</div>
+            <p class="step-desc">Go to the <strong>Profile</strong> page. Upload your resume or business plan so the AI learns your story.</p>
+        </div>
+
+        <div class="step-card">
+            <span class="icon">🔍</span>
+            <div class="step-title">2. Find Funding</div>
+            <p class="step-desc">Use the search bar below to find scholarships, grants, or funding opportunities.</p>
+        </div>
+
+        <div class="step-card">
+            <span class="icon">✍️</span>
+            <div class="step-title">3. Write Proposal</div>
+            <p class="step-desc">Go to <strong>Grant Writer</strong>. The AI will write a custom essay for you in seconds.</p>
+        </div>
+    </div>
 
     <div class="search-box">
-        <input type="text" id="query" placeholder="E.g., Scholarships for nursing students in Texas...">
-        <button onclick="search()">Search</button>
+        <h3>🔍 Start Your Search</h3>
+        <input type="text" id="query" placeholder="e.g. Nursing scholarships in Hawaii...">
+        <button onclick="searchScholarships()">Find Money</button>
     </div>
 
-    <div id="loading">Scanning the web for live scholarships...</div>
     <div id="results"></div>
 
     <script>
-        async function search() {
+        async function searchScholarships() {
             const query = document.getElementById('query').value;
             const resultsDiv = document.getElementById('results');
-            const loading = document.getElementById('loading');
             
-            if(!query) return alert("Type something!");
-
-            loading.style.display = 'block';
-            resultsDiv.innerHTML = '';
-
+            if(!query) return alert("Please type a search topic!");
+            
+            resultsDiv.innerHTML = "<p style='text-align:center'>Searching the web...</p>";
+            
             try {
-                const response = await fetch('/api/search', {
+                const res = await fetch('/api/search', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ query: query })
+                    body: JSON.stringify({ query })
                 });
-
-                const data = await response.json();
-                loading.style.display = 'none';
-
-                // We assume Perplexity returns a block of text. We will display it simply.
-                // In a future version, we can force JSON to make "cards" prettier.
-                // For now, let's treat the whole response as a list.
+                const data = await res.json();
                 
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                // Convert newlines to HTML breaks so it looks readable
-                const cleanText = data.choices[0].message.content.replace(/\n/g, '<br>');
+                // Format the AI response into readable cards
+                // Note: We are using a simple replace here to handle bolding for now
+                let html = data.choices[0].message.content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>');
                 
-                card.innerHTML = `
-                    <h3>Search Results</h3>
-                    <p>${cleanText}</p>
-                    <hr>
-                    <p><strong>Found one you like?</strong> Copy the question and click below:</p>
-                    <a href="write.html" class="apply-btn" style="text-decoration:none; color:white; padding:10px 20px; border-radius:4px;">
-                        Go to Essay Writer →
-                    </a>
-                `;
-                resultsDiv.appendChild(card);
-
+                resultsDiv.innerHTML = html;
             } catch (err) {
-                loading.style.display = 'none';
-                alert("Search failed. Check server.");
+                resultsDiv.innerHTML = "<p style='color:red; text-align:center'>Search failed. Try again.</p>";
             }
         }
     </script>
